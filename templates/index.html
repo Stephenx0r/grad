@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graduation Invitation Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Scan Your Invitation QR Code</h1>
+    </header>
+
+    <div class="container">
+        <!-- The src attribute will be set dynamically via JavaScript -->
+        <img id="qr_code" class="qr-image" src="" alt="QR Code">
+        <div id="scan-message"></div>
+{#        <button onclick="generateQRCode()">Generate New QR Code</button>#}
+    </div>
+
+    <footer>
+        <p>Graduation Invitation Scanner © 2024</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // This function will be called immediately to set the QR code image
+        function setQRCode() {
+            fetch('/qr')
+                .then(response => response.blob())
+                .then(blob => {
+                    const qrCodeImg = document.getElementById('qr_code');
+                    qrCodeImg.src = URL.createObjectURL(blob);
+                    // Assuming the QR code URL contains the QR ID, extract it for the scanQR function
+                    qrCodeImg.dataset.qrId = qrCodeImg.src.split('/').pop();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('scan-message').textContent = 'Error occurred while fetching QR code.';
+                });
+        }
+
+        function scanQR(qrId) {
+            fetch(`/scan/${qrId}`)  // Use the QR ID for the fetch request
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('scan-message').textContent = data.message;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('scan-message').textContent = 'Error occurred while scanning QR code.';
+                });
+        }
+
+        document.getElementById('qr_code').addEventListener('click', function() {
+            const qrId = this.dataset.qrId;  // Retrieve the QR ID stored in data-qr-id
+            if (qrId) {
+                scanQR(qrId);
+            } else {
+                console.error('QR ID is not set.');
+            }
+        });
+
+        // Set the QR code image when the page loads
+        setQRCode();
+    </script>
+</body>
+</html>
